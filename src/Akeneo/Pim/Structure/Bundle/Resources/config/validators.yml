@@ -1,5 +1,5 @@
 parameters:
-    max_attribute_groups: 1000
+    max_attribute_groups: 50000
     identifier_attribute_creation_limit: 10
 
 services:

@@ -2,7 +2,7 @@ import React from 'react';
 import {Button} from 'akeneo-design-system';
 import {useRouter, useSecurity, useTranslate} from '@akeneo-pim-community/shared';
 
-const MAX_ATTRIBUTE_GROUPS = 1000;
+const MAX_ATTRIBUTE_GROUPS = 50000;
 
 type AttributeGroupsCreateButtonProps = {
   attributeGroupCount: number;
