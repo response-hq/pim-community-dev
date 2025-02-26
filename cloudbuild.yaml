@@ -1,0 +1,21 @@
+steps:
+  # Docker Build
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 
+           'us-central1-docker.pkg.dev/response-dev-416518/akeneo/akeneo:$COMMIT_SHA',
+           '-f', './Dockerfile',
+           '.']
+
+  # Docker Push
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 
+           'us-central1-docker.pkg.dev/response-dev-416518/akeneo/akeneo:$COMMIT_SHA']
+
+  # GCLI deploy the image with current tag
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args: ['run', 'deploy', 'akeneo', '--image', 'us-central1-docker.pkg.dev/response-dev-416518/akeneo/akeneo:$COMMIT_SHA', '--region', 'us-central1']
+
+
+options:
+  logging: CLOUD_LOGGING_ONLY
