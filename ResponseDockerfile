@@ -1,0 +1,70 @@
+FROM akeneo/pim-php-dev:8.1 as base
+
+LABEL maintainer="engineering@tryresponse.com"
+LABEL version="8.1"
+LABEL description="Akeneo"
+
+ENV APP_ENV=prod \
+    PHP_CONF_DATE_TIMEZONE=UTC \
+    PHP_CONF_MAX_EXECUTION_TIME=0 \
+    PHP_CONF_MEMORY_LIMIT=-1 \
+    PHP_CONF_OPCACHE_VALIDATE_TIMESTAMP=0 \
+    PHP_CONF_UPLOAD_LIMIT=32M \
+    PHP_CONF_MAX_POST_SIZE=32M
+
+RUN curl -sL https://deb.nodesource.com/setup_18.x -o nodesource_setup.sh
+RUN bash nodesource_setup.sh && apt install nodejs && npm install -g yarn
+
+WORKDIR /srv/pim
+
+# Copy in required config/source/binaries
+ADD .env .env
+ADD composer.json composer.json
+ADD composer.lock composer.lock
+ADD package.json package.json
+ADD symfony.lock symfony.lock
+ADD tsconfig.json tsconfig.json
+ADD webpack.config.js webpack.config.js
+ADD yarn.lock yarn.lock
+ADD bin bin
+ADD config config
+ADD components components
+ADD docker docker
+ADD front-packages front-packages
+ADD frontend frontend
+ADD public public
+ADD src src
+ADD upgrades upgrades
+
+# Install dependencies
+RUN php /usr/local/bin/composer validate --no-check-all
+RUN php -d memory_limit=4G /usr/local/bin/composer update
+RUN php -d memory_limit=4G /usr/local/bin/composer install
+RUN yarn install --frozen-lockfile
+
+# Warm-up the cache
+RUN rm -rf var/cache && php bin/console cache:warmup
+
+# Install assets, frontend packages
+RUN rm -rf public/bundles public/js
+RUN php bin/console --env=prod pim:installer:assets --symlink --clean
+RUN rm -rf public/css
+RUN yarn run less
+RUN yarn packages:build
+RUN yarn run update-extensions
+RUN rm -rf public/dist
+RUN yarn run webpack
+
+# Copy over Apache server config
+ADD docker/httpd.conf /usr/local/apache2/conf/httpd.conf
+ADD docker/akeneo.conf /usr/local/apache2/conf/vhost.conf
+
+# Set permissions correctly
+RUN chown -R www-data:www-data /srv/pim
+RUN usermod -u 1000 -o www-data && groupmod -g 1000 -o www-data
+
+# Setup the entrypoint
+ADD entrypoint.sh entrypoint.sh
+RUN chmod +x entrypoint.sh
+ENTRYPOINT ["/srv/pim/entrypoint.sh"]
+EXPOSE 80
