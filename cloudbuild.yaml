@@ -3,7 +3,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 
            'us-central1-docker.pkg.dev/response-dev-416518/akeneo/akeneo:$COMMIT_SHA',
-           '-f', './Dockerfile',
+           '-f', './ResponseDockerfile',
            '.']
 
   # Docker Push
