@@ -12,7 +12,7 @@ services:
     akeneo_elasticsearch.registry.clients:
         class: '%akeneo_elasticsearch.registry.clients.class%'
 
-        akeneo_elasticsearch.client_builder_factory:
+    akeneo_elasticsearch.client_builder_factory:
         class: Akeneo\Tool\Bundle\ElasticsearchBundle\Infrastructure\Client\ClientBuilderFactory
         arguments:
             - ['%index_hosts%']
